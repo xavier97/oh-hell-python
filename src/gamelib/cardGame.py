@@ -7,7 +7,6 @@ Created on Fri Apr 12 11:58:48 2019
 import random
 
 class card:
-    
     def __init__(self, s, val):
         if(val < 11):
             name = s + str(val)
@@ -23,11 +22,16 @@ class card:
         self.suit = s
         self.value = val
         
-    def outputCard(self):
-        print(self.cardName)
+    def getCard(self):
+        return self.cardName
+    
+    def getSuit(self):
+        return self.suit
+    
+    def getVal(self):
+        return self.value
         
 class deck:
-    
     def __init__(self):
         self.mydeck = []
         
@@ -42,6 +46,48 @@ class deck:
         del self.mydeck[0]
         return card
     
-    def outputDeck(self):
+    def toStringDeck(self):
         for i in self.mydeck:
-            print(i.outputCard())
+            return i.getCard()
+            
+class player:
+    def __init__(self):
+        self.hand = []
+        self.bid = 0
+        self.tricks = 0
+        self.points = 0
+        
+    def setBid(self, b):
+        self.bid = b
+        
+    def getBid(self):
+        return self.bid
+    
+    def addTrick(self, t):
+        self.tricks = self.tricks + t
+        
+    def clearTricks(self):
+        self.tricks = 0
+        
+    def getTricks(self):
+        return self.tricks
+    
+    def calcPoints(self, points, add):
+        if(add):
+            self.points += points
+        else:
+            self.points -= points
+            
+    def getPoints(self):
+        return self.points
+    
+    def clearPoints(self):
+        self.points = 0
+        
+    def addCardToHand(self, card):
+        self.hand.append(card)
+        
+    def discard(self, index):
+        card = self.hand[index]
+        del self.hand[index]
+        return card
