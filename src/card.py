@@ -5,6 +5,11 @@ Created on Wed Apr 10 16:15:58 2019
 @author: Nicholas
 """
 
-class card:
+import pygame
+
+
+print("Hello")
+
+#class card:
     
     #TODO card class
