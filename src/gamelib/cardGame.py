@@ -46,9 +46,14 @@ class deck:
         del self.mydeck[0]
         return card
     
+    def flipCard(self):
+        return self.mydeck[0]
+    
     def toStringDeck(self):
+        decklist = []
         for i in self.mydeck:
-            return i.getCard()
+            decklist.append(i.getCard())
+        return print(decklist)
             
 class player:
     def __init__(self):
@@ -84,10 +89,22 @@ class player:
     def clearPoints(self):
         self.points = 0
         
+    def discardBySuit(self, suitAsked):
+        for index in range(len(self.hand)):
+            if(self.hand[index].getSuit() == suitAsked):
+                return self.discard(index)
+        return self.discard(random.choice(range(len(self.hand))))
+        
     def addCardToHand(self, card):
         self.hand.append(card)
-        
+    
+    def viewHand(self):
+        handString = ""
+        for index in range(len(self.hand)):
+            handString = handString + str(index) + ")" + str(self.hand[index].getCard()) + " | "
+        return print(handString)            
+             
     def discard(self, index):
         card = self.hand[index]
         del self.hand[index]
-        return card
+        return card 
