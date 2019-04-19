@@ -21,6 +21,7 @@ class card:
         self.cardName = name
         self.suit = s
         self.value = val
+        self.tagID = 0
         
     def getCard(self):
         return self.cardName
@@ -30,6 +31,13 @@ class card:
     
     def getVal(self):
         return self.value
+    
+    #Keep track of who played the card
+    def setTagID(self, ID):
+        self.playerID = ID
+        
+    def getTagID(self):
+        return self.playerID
         
 class deck:
     def __init__(self):
@@ -47,7 +55,7 @@ class deck:
         return card
     
     def flipCard(self):
-        return self.mydeck[0]
+        return self.mydeck[0].getCard()
     
     def toStringDeck(self):
         decklist = []
@@ -56,11 +64,15 @@ class deck:
         return print(decklist)
             
 class player:
-    def __init__(self):
+    def __init__(self, ID):
         self.hand = []
         self.bid = 0
         self.tricks = 0
         self.points = 0
+        self.playerID = ID
+        
+    def getPlayerID(self):
+        return self.playerID
         
     def setBid(self, b):
         self.bid = b
@@ -68,8 +80,8 @@ class player:
     def getBid(self):
         return self.bid
     
-    def addTrick(self, t):
-        self.tricks = self.tricks + t
+    def addTrick(self):
+        self.tricks = self.tricks + 1
         
     def clearTricks(self):
         self.tricks = 0
@@ -88,22 +100,35 @@ class player:
     
     def clearPoints(self):
         self.points = 0
-        
-    def discardBySuit(self, suitAsked):
-        for index in range(len(self.hand)):
-            if(self.hand[index].getSuit() == suitAsked):
-                return self.discard(index)
-        return self.discard(random.choice(range(len(self.hand))))
-        
+    
+    #Checks the validity of a play
+    def checkPlay(self, index, suitAsked):
+        if(self.hand[index].getSuit() == suitAsked):
+            return True
+        else:
+            for card in self.hand:
+                if(card.getSuit() == suitAsked):
+                    return False
+            return True
+            
     def addCardToHand(self, card):
+        card.setTagID(self.playerID)
         self.hand.append(card)
     
     def viewHand(self):
         handString = ""
         for index in range(len(self.hand)):
             handString = handString + str(index) + ")" + str(self.hand[index].getCard()) + " | "
-        return print(handString)            
-             
+        return print(handString)
+
+    #Discards suit asked if suit is in hand. Else discards a random card
+    def discardBySuit(self, suitAsked):
+        for index in range(len(self.hand)):
+            if(self.hand[index].getSuit() == suitAsked):
+                return self.discard(index)
+        return self.discard(random.choice(range(len(self.hand))))            
+    
+    #Discards specified card         
     def discard(self, index):
         card = self.hand[index]
         del self.hand[index]

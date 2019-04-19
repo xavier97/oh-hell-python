@@ -7,26 +7,154 @@ Created on Fri Apr 12 10:34:47 2019
 from gamelib import cardGame
 import random
 
+#GAMEPLAY FUNCTIONS
+#-----------------------------------------------------------------------------
+def viewField():
+    print("\nFIELD: \n---------------------------------")
+    fieldObj.toStringDeck()
+    print("Suit asked: " + suitAsked.upper())
+    print("Trump: " + trump.upper())
+    print("---------------------------------")
+
+def showHand():
+    print("\n YOUR HAND:")
+    player1.viewHand()
+
 def computerTurn(comp):
     global fieldObj
     global suitAsked
-    if(not fieldObj.mydeck):
+    #If first card played then pick random card from hand to play
+    if(suitAsked == None):
         cardPlayed = comp.discard(random.choice(range(len(comp.hand))))
         fieldObj.addCard(cardPlayed)
         suitAsked = cardPlayed.getSuit()
+    #Else discard by suit asked
     else:
         cardPlayed = comp.discardBySuit(suitAsked)
         fieldObj.addCard(cardPlayed)
         
-
+def playerTurn(player):
+    global suitAsked
+    validPlay = False
+    #Check if play is valid
+    while(not validPlay):
+        validCard = False
+        #Check if card choice is valid
+        while(not validCard):
+            cardChoice = int(input("Enter card to play: "))
+            if((cardChoice < 0) or (cardChoice > len(player.hand)-1)):
+                print("Error: Input not in range of hand")
+            else:
+                validCard = True
+        
+        #If first card played then card choice is automatically valid
+        if(suitAsked == None):
+            suitAsked = player.hand[cardChoice].getSuit()
+            break
+            
+        validPlay = player.checkPlay(cardChoice, suitAsked)
+        if(not validPlay):
+            print("Play is not valid. Must play suit asked!")
+     
+    
+    #Discard from hand and add card to field
+    fieldObj.addCard(player.discard(cardChoice))
+    
+def playTrick():
+    if(startingPlayer == "p1"):
+        print("You play first! Pick any card to start the trick")
+        showHand()
+        playerTurn(player1)
+        computerTurn(comPlayer2)
+        computerTurn(comPlayer3)
+        computerTurn(comPlayer4)
+    elif(startingPlayer == "p2"):
+        print("Player 2 starts the trick")
+        computerTurn(comPlayer2)
+        computerTurn(comPlayer3)
+        computerTurn(comPlayer4)
+        viewField()
+        showHand()
+        playerTurn(player1)
+    elif(startingPlayer == "p3"):
+        print("Player 3 starts the trick")
+        computerTurn(comPlayer3)
+        computerTurn(comPlayer4)
+        viewField()
+        showHand()
+        playerTurn(player1)
+        computerTurn(comPlayer2)
+    elif(startingPlayer == "p4"):
+        print("Player 4 starts the trick")
+        computerTurn(comPlayer4)
+        viewField()
+        showHand()
+        playerTurn(player1)
+        computerTurn(comPlayer2)
+        computerTurn(comPlayer3)
+        
+def resolveTrick():
+    global suitAsked
+    winningSuit = suitAsked
+    winningVal = 0
+    winningCard = None
+    for card in fieldObj.mydeck:
+        print("LOOP LOOP LOOP")
+        #If card is trump
+        if(card.getSuit() == trump):
+            #If current winning card isn't trump automatic win
+            if(winningSuit == suitAsked):
+                winningCard = card
+                winningSuit = trump
+                winningVal = card.getVal()
+            #If current winning card is also trump check values 
+            elif(card.getVal() > winningVal):
+                winningCard = card
+        #If card is suit asked
+        elif(card.getSuit() == suitAsked):
+            if((winningSuit != trump) and (card.getVal() > winningVal)):
+                winningCard = card
+                winningVal = card.getVal()
+        print("Winning val: " + str(winningVal))
+                
+    print("WINNING CARD: " + winningCard.getCard())
+   
+    #Check which player played the winning card and give them the trick             
+    if(player1.getPlayerID() == winningCard.getTagID()):
+        player1.addTrick()
+    elif(comPlayer2.getPlayerID() == winningCard.getTagID()):
+        comPlayer2.addTrick()
+    elif(comPlayer3.getPlayerID() == winningCard.getTagID()):
+        comPlayer3.addTrick()
+    elif(comPlayer4.getPlayerID() == winningCard.getTagID()):
+        comPlayer4.addTrick()
+    
+    #Send cards in field back to deck
+    for i in range(4):
+        deckObj.addCard(fieldObj.drawCard())
+    
+    #Player who won trick starts next round
+    global startingPlayer 
+    startingPlayer = winningCard.getTagID()
+    print("*** " + startingPlayer + " won the trick! ***")
+    print("END OF TRICK")
+    print("---------------------------------")
+    #Reset suitAsked
+    suitAsked = None
+    
+#TODO 
+#ResolveRound
+#-----------------------------------------------------------------------------       
+        
 #GLOBALS
 #-----------------------------------------------------------------------------
 deckObj = cardGame.deck()
 fieldObj = cardGame.deck()
-player1 = cardGame.player()
-comPlayer2 = cardGame.player()
-comPlayer3 = cardGame.player()
-comPlayer4 = cardGame.player()
+player1 = cardGame.player("p1")
+comPlayer2 = cardGame.player("p2")
+comPlayer3 = cardGame.player("p3")
+comPlayer4 = cardGame.player("p4")
+startingPlayer = "p2"  #Player2 starts round 1
 suitAsked = None
 roundNum = 1
 cardsNum = 13
@@ -46,16 +174,6 @@ for val in range(2, 15):
 print("Deck created")
 deckObj.toStringDeck()
 deckObj.shuffle()
-
-'''
-cardlist = []
-handList = []
-for i in range(1,6):
-    handList.append(deckObj.drawCard().getCard())
-    
-for i in deckObj.mydeck:
-    cardlist.append(i.getCard())
-'''    
 
 print("Welcome to Oh Hell!")
 #GAME LOOP
@@ -131,19 +249,12 @@ while(True):
     else:
         break
     
-#Computer Turns
-computerTurn(comPlayer2)
-computerTurn(comPlayer3)
-computerTurn(comPlayer4)
-
-print("\nFIELD: \n---------------------------------")
-fieldObj.toStringDeck()
-print("Suit asked: " + suitAsked.upper())
-print("Trump: " + trump.upper())
-print("---------------------------------")
-
-print("\n YOUR HAND:")
-player1.viewHand()
+playTrick()
+viewField()
+resolveTrick()
+playTrick()
+viewField()
+resolveTrick()
 
 
 
@@ -152,17 +263,6 @@ player1.viewHand()
 
        
     
-
-
-
-
-
-
-
-
-
-
-
 
 
 
