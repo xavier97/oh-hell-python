@@ -89,11 +89,8 @@ class player:
     def getTricks(self):
         return self.tricks
     
-    def calcPoints(self, points, add):
-        if(add):
-            self.points += points
-        else:
-            self.points -= points
+    def addPoints(self, points):
+        self.points += points
             
     def getPoints(self):
         return self.points
