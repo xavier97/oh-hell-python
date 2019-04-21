@@ -200,14 +200,15 @@ for val in range(2, 15):
 for val in range(2, 15):
     deckObj.addCard(cardGame.card("spades", val))
 
-print("Deck created")
-deckObj.toStringDeck()
-deckObj.shuffle()
+#print("Deck created")
+#deckObj.toStringDeck()
+
 
 print("Welcome to Oh Hell!")
 #GAME LOOP
 #-----------------------------------------------------------------------------
 while(not done):
+    deckObj.shuffle()
     print("Starting Round " + str(roundNum))
     if(roundNum < 13):
         print("Dealing every player " + str(cardsNum) + " cards")
@@ -247,9 +248,9 @@ while(not done):
     
     #Giving the computer more reasonable bids it makes the game more competitive
     try:
-        comPlayer2.setBid(random.choice(range(6)))
-        comPlayer3.setBid(random.choice(range(6)))
-        comPlayer4.setBid(random.choice(range(6)))
+        comPlayer2.setBid(random.choice(range(5)))
+        comPlayer3.setBid(random.choice(range(5)))
+        comPlayer4.setBid(random.choice(range(5)))
     except IndexError:
         comPlayer2.setBid(random.choice(range(cardsNum)))
         comPlayer3.setBid(random.choice(range(cardsNum)))
