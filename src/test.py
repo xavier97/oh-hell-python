@@ -59,16 +59,109 @@ def playerTurn(player):
     
     #Discard from hand and add card to field
     fieldObj.addCard(player.discard(cardChoice))
+
+#BIDDING
+#*****************************************************************************
+#*****************************************************************************    
+def playerBid(player):
+    while(True):
+        bid = int(input("\nEnter your bid for this round: "))
+        if((bid >= 0) and (bid <= cardsNum)):
+            break
+        else:
+            print("Error: Please enter bid between 0 and " + str(cardsNum))
+    player1.setBid(bid)
+
+def p1StartBid():
+    playerBid(player1)
+    #Computer bids
+    try:
+        comPlayer2.setBid(random.choice(range(5)))
+        comPlayer3.setBid(random.choice(range(5)))
+        comPlayer4.setBid(random.choice(range(5)))
+    except IndexError:
+        comPlayer2.setBid(random.choice(range(cardsNum)))
+        comPlayer3.setBid(random.choice(range(cardsNum)))
+        comPlayer4.setBid(random.choice(range(cardsNum)))
+    #Last Bid Check
+    while(True):
+        bidSum = player1.getBid() + comPlayer2.getBid() + comPlayer3.getBid() + comPlayer4.getBid()
+        if(bidSum == cardsNum):
+            comPlayer4.setBid(random.choice(range(cardsNum)))
+        else:
+            break
+        
+def p2StartBid():
+    #Computer bids
+    try:
+        comPlayer2.setBid(random.choice(range(5)))
+        comPlayer3.setBid(random.choice(range(5)))
+        comPlayer4.setBid(random.choice(range(5)))
+    except IndexError:
+        comPlayer2.setBid(random.choice(range(cardsNum)))
+        comPlayer3.setBid(random.choice(range(cardsNum)))
+        comPlayer4.setBid(random.choice(range(cardsNum)))
+    playerBid(player1)
+    #Last Bid Check
+    while(True):
+        bidSum = player1.getBid() + comPlayer2.getBid() + comPlayer3.getBid() + comPlayer4.getBid()
+        if(bidSum == cardsNum):
+            print("Sum of all bids cannot equal number of cards in hand!")
+            playerBid(player1)
+        else:
+            break
+    
+def p3StartBid():
+    #Bids
+    try:
+        comPlayer3.setBid(random.choice(range(5)))
+        comPlayer4.setBid(random.choice(range(5)))
+        playerBid(player1)
+        comPlayer2.setBid(random.choice(range(5)))
+    except IndexError:
+        comPlayer3.setBid(random.choice(range(cardsNum)))
+        comPlayer4.setBid(random.choice(range(cardsNum)))
+        playerBid(player1)
+        comPlayer2.setBid(random.choice(range(5)))
+    #Last Bid Check
+    while(True):
+        bidSum = player1.getBid() + comPlayer2.getBid() + comPlayer3.getBid() + comPlayer4.getBid()
+        if(bidSum == cardsNum):
+            comPlayer2.setBid(random.choice(range(cardsNum)))
+        else:
+            break
+    
+def p4StartBid():
+    #Bids
+    try:
+        comPlayer4.setBid(random.choice(range(5)))
+        playerBid(player1)
+        comPlayer2.setBid(random.choice(range(5)))
+        comPlayer3.setBid(random.choice(range(5)))
+    except IndexError:
+        comPlayer4.setBid(random.choice(range(cardsNum)))
+        playerBid(player1)
+        comPlayer2.setBid(random.choice(range(5)))
+        comPlayer3.setBid(random.choice(range(5)))
+    #Last Bid Check
+    while(True):
+        bidSum = player1.getBid() + comPlayer2.getBid() + comPlayer3.getBid() + comPlayer4.getBid()
+        if(bidSum == cardsNum):
+            comPlayer3.setBid(random.choice(range(cardsNum)))
+        else:
+            break
+#*****************************************************************************
+#*****************************************************************************
     
 def playTrick():
-    if(startingPlayer == "p1"):
+    if(trickStarter == "p1"):
         print("You play first! Pick any card to start the trick")
         showHand()
         playerTurn(player1)
         computerTurn(comPlayer2)
         computerTurn(comPlayer3)
         computerTurn(comPlayer4)
-    elif(startingPlayer == "p2"):
+    elif(trickStarter == "p2"):
         print("Player 2 starts the trick")
         computerTurn(comPlayer2)
         computerTurn(comPlayer3)
@@ -76,7 +169,7 @@ def playTrick():
         viewField()
         showHand()
         playerTurn(player1)
-    elif(startingPlayer == "p3"):
+    elif(trickStarter == "p3"):
         print("Player 3 starts the trick")
         computerTurn(comPlayer3)
         computerTurn(comPlayer4)
@@ -84,7 +177,7 @@ def playTrick():
         showHand()
         playerTurn(player1)
         computerTurn(comPlayer2)
-    elif(startingPlayer == "p4"):
+    elif(trickStarter == "p4"):
         print("Player 4 starts the trick")
         computerTurn(comPlayer4)
         viewField()
@@ -131,9 +224,9 @@ def resolveTrick():
         deckObj.addCard(fieldObj.drawCard())
     
     #Player who won trick starts next round
-    global startingPlayer 
-    startingPlayer = winningCard.getTagID()
-    print("*** " + startingPlayer + " won the trick! ***")
+    global trickStarter
+    trickStarter = winningCard.getTagID()
+    print("*** " + trickStarter + " won the trick! ***")
     print("END OF TRICK")
     print("************************************")
     #Reset suitAsked
@@ -156,15 +249,20 @@ def resolveRound():
     comPlayer4.clearTricks()
     
     #Move starting player to the left for next round
-    global startingPlayer
-    if(startingPlayer == "p1"):
-        startingPlayer = "p2"
-    elif(startingPlayer == "p2"):
-        startingPlayer = "p3"
-    elif(startingPlayer == "p3"):
-        startingPlayer = "p4"
-    elif(startingPlayer == "p4"):
-        startingPlayer = "p1"
+    global roundStarter
+    global trickStarter
+    if(roundStarter == "p1"):
+        roundStarter = "p2"
+        trickStarter = "p2"
+    elif(roundStarter == "p2"):
+        roundStarter = "p3"
+        trickStarter = "p3"
+    elif(roundStarter == "p3"):
+        roundStarter = "p4"
+        trickStarter = "p4"
+    elif(roundStarter == "p4"):
+        roundStarter = "p1"
+        trickStarter = "p1"
         
     
     print("LEADERBOARD:")
@@ -183,7 +281,8 @@ player1 = cardGame.player("p1")
 comPlayer2 = cardGame.player("p2")
 comPlayer3 = cardGame.player("p3")
 comPlayer4 = cardGame.player("p4")
-startingPlayer = "p2"  #Player2 starts round 1
+trickStarter = "p2" #keeps track of who starts the next trick
+roundStarter = "p2" #Player2 starts round 1
 suitAsked = None
 roundNum = 1
 cardsNum = 13
@@ -232,36 +331,16 @@ while(not done):
     
     print("Trump this round: " + trump.upper())
     
-    print("\n YOUR HAND:")
-    player1.viewHand()
-    
-    #Bidding
-    while(True):
-        bid = int(input("\nEnter your bid for this round: "))
-        if((bid >= 0) and (bid <= cardsNum)):
-            break
-        else:
-            print("Error: Please enter bid between 0 and " + str(cardsNum))
-    player1.setBid(bid)
-    
-    #Giving the computer more reasonable bids it makes the game more competitive
-    try:
-        comPlayer2.setBid(random.choice(range(5)))
-        comPlayer3.setBid(random.choice(range(5)))
-        comPlayer4.setBid(random.choice(range(5)))
-    except IndexError:
-        comPlayer2.setBid(random.choice(range(cardsNum)))
-        comPlayer3.setBid(random.choice(range(cardsNum)))
-        comPlayer4.setBid(random.choice(range(cardsNum)))
-    print("************************************")
-    
-    #Last Bid Check
-    while(True):
-        bidSum = player1.getBid() + comPlayer2.getBid() + comPlayer3.getBid() + comPlayer4.getBid()
-        if(bidSum == cardsNum):
-            comPlayer4.setBid(random.choice(range(cardsNum)))
-        else:
-            break
+    showHand()
+
+    if(roundStarter == "p1"):
+        p1StartBid()
+    elif(roundStarter == "p2"):
+        p2StartBid()
+    elif(roundStarter == "p3"):
+        p3StartBid()
+    elif(roundStarter == "p4"):
+        p4StartBid()
         
     #Play till no cards left in hand
     for i in range(cardsNum):
