@@ -346,7 +346,7 @@ class InputBox:
         self.active = False
 
     def handle_event(self, event):
-        print("inside")
+        FONT = pygame.font.Font(None, 32)
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
@@ -370,7 +370,7 @@ class InputBox:
 
     def update(self):
         # Resize the box if the text is too long.
-        width = max(200, self.txt_surface.get_width()+10)
+        width = max(40, self.txt_surface.get_width()+10)
         self.rect.w = width
 
     def draw(self, screen):
@@ -532,7 +532,7 @@ done = False
 #MAIN
 #*****************************************************************************
 def main():    
-#CREATE DECK
+    #CREATE DECK
     for val in range(2, 15):  
         deckObj.addCard(cardGame.card("hearts", val))
     for val in range(2, 15):  
@@ -542,9 +542,10 @@ def main():
     for val in range(2, 15):
         deckObj.addCard(cardGame.card("spades", val))
         
-    bid_input_box = InputBox(640, 720, 160, 50)
-    input_boxes = [bid_input_box]      
-#MAIN GAME LOOP
+    bid_input_box = InputBox(640, 640, 40, 40) # note make 600 -> 720
+    input_boxes = [bid_input_box]    
+    
+    #MAIN GAME LOOP
     while (not done):
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
@@ -552,12 +553,6 @@ def main():
                 exit()
             for box in input_boxes:
                 box.handle_event(event)
-                    
-        for box in input_boxes:
-            box.update()
-    
-        for box in input_boxes:
-            box.draw(DISPLAYSURF)
 
     
         #Shuffle deck
@@ -617,6 +612,11 @@ def main():
         newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
         newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
         newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
+        for box in input_boxes:
+            box.update()
+        for box in input_boxes:
+            box.draw(DISPLAYSURF)
         
         fpsClock.tick(60)
         pygame.display.update()
