@@ -6,7 +6,7 @@ This is a temporary script file.
 """    
 import pygame, sys, os, math, random
 from pygame.locals import *
-from gameLib import cardGame
+from gamelib import cardGame
 
 class Card:
     card_name = ""
@@ -313,8 +313,8 @@ screen_height = 700
 
 # Image Locations
 DEFAULT_ICON = os.path.join('../assets/images/', 'icon-fire.png')
-C2_PATH = os.path.join('../assets/images/cards', 'C2.gif')
-C3_PATH = os.path.join('../assets/images/cards', 'C3.gif')
+C2_PATH = os.path.join('../assets/images/cards', 'clubs2.gif')
+C3_PATH = os.path.join('../assets/images/cards', 'clubs3.gif')
 BACK_PATH = os.path.join('../assets/images/cards', 'back.gif')
 
 # Load Images
@@ -415,7 +415,7 @@ def opponent_cards(opponent_id, opponent_num_cards):
         DISPLAYSURF.blit(newBack, (680, 45))
     
 def opponent_play():
-    opponent_card_list = ["DA", "H2", "SK"] # cards each opponent chose to play
+    opponent_card_list = ["diamondsAce", "hearts2", "SpadesKing"] # cards each opponent chose to play
     
     # Opponent 1
     angle = 90
@@ -479,7 +479,7 @@ while True: # main game loop
             pygame.quit()
             exit()
 
-    card1 = Card(198, 461, "CA")
+    card1 = Card(198, 461, "clubsAce")
 
     # Player's card spots
     card_button(card1, send_card_action)
