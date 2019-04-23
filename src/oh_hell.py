@@ -8,6 +8,7 @@ import pygame, sys, os, math, random
 from pygame.locals import *
 from gamelib import cardGame
 
+'''
 class Card:
     card_name = ""
     posx = 0
@@ -22,6 +23,7 @@ class Card:
         path = os.path.join('../assets/images/cards', self.card_name + '.gif')
         card_image = pygame.image.load(path)
         return card_image
+'''
     
 #GAMEPLAY LOGIC FUNCTIONS
 #-----------------------------------------------------------------------------
@@ -288,23 +290,6 @@ def resolveRound():
     print("Player4: " + str(comPlayer4.getPoints()))
     print("************************************")
 #-----------------------------------------------------------------------------       
-        
-#GLOBALS
-#-----------------------------------------------------------------------------
-deckObj = cardGame.deck()
-fieldObj = cardGame.deck()
-player1 = cardGame.player("p1")
-comPlayer2 = cardGame.player("p2")
-comPlayer3 = cardGame.player("p3")
-comPlayer4 = cardGame.player("p4")
-trickStarter = "p2" #keeps track of who starts the next trick
-roundStarter = "p2" #Player2 starts round 1
-suitAsked = None
-roundNum = 1
-cardsNum = 13
-trump = None
-done = False
-#-----------------------------------------------------------------------------
 
 # ------------------- ASSETS -------------------
 # Window set-up
@@ -415,24 +400,27 @@ def opponent_cards(opponent_id, opponent_num_cards):
         DISPLAYSURF.blit(newBack, (680, 45))
     
 def opponent_play():
-    opponent_card_list = ["diamondsAce", "hearts2", "SpadesKing"] # cards each opponent chose to play
+    #opponent_card_list = ["diamondsAce", "hearts2", "SpadesKing"] # cards each opponent chose to play
     
     # Opponent 1
     angle = 90
-    card = Card(439, 275, opponent_card_list[0])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
+    card = cardGame.card("diamonds", 14)
+    card.updateCardPosition(439, 275)
+    new_card = pygame.transform.rotate(card.displayCard(), angle)
     DISPLAYSURF.blit(new_card, (card.posx, card.posy))
     
     # Opponent 2
     angle = 180
-    card = Card(560, 202, opponent_card_list[1])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
+    card = cardGame.card("hearts", 2)
+    card.updateCardPosition(560, 202)
+    new_card = pygame.transform.rotate(card.displayCard(), angle)
     DISPLAYSURF.blit(new_card, (card.posx, card.posy))
     
     # Opponent 3
     angle = 90
-    card = Card(657, 275, opponent_card_list[2])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
+    card = cardGame.card("spades", 13)
+    card.updateCardPosition(657, 275)
+    new_card = pygame.transform.rotate(card.displayCard(), angle)
     DISPLAYSURF.blit(new_card, (card.posx, card.posy))
     
     
@@ -467,65 +455,115 @@ def newLabel(msg, x, y, w, h, background_color, text_color=BLACK):
     
 # ------------------- ACTION EVENTS -------------------
 def send_card_action(card):
-    DISPLAYSURF.blit(card.display_card(), (560, 323))
+    DISPLAYSURF.blit(card.displayCard(), (560, 323))
+    player1.discard(card.getCard())
         
 def quit_action():
     pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218))
 # -----------------------------------------------------
+#GLOBALS
+#-----------------------------------------------------------------------------
+deckObj = cardGame.deck()
+fieldObj = cardGame.deck()
+player1 = cardGame.player("p1")
+comPlayer2 = cardGame.player("p2")
+comPlayer3 = cardGame.player("p3")
+comPlayer4 = cardGame.player("p4")
+trickStarter = "p2" #keeps track of who starts the next trick
+roundStarter = "p2" #Player2 starts round 1
+suitAsked = None
+roundNum = 1
+cardsNum = 10
+trump = None
+done = False
 
-while True: # main game loop
-    for event in pygame.event.get():
-        if event.type == pygame.locals.QUIT:
-            pygame.quit()
-            exit()
-
-    card1 = Card(198, 461, "clubsAce")
-
-    # Player's card spots
-    card_button(card1, send_card_action)
-    #card_button(278, 461, send_card_action)
-    #card_button(358, 461, send_card_action)
-    #card_button(438, 461, send_card_action)
-    #card_button(518, 461, send_card_action)
-    #card_button(598, 461, send_card_action)
-    #card_button(678, 461, send_card_action)
-    #card_button(758, 461, send_card_action)
-    #card_button(838, 461, send_card_action)
-    #card_button(918, 461, send_card_action)
+#*****************************************************************************
+#MAIN
+#*****************************************************************************
+def main():    
+#CREATE DECK
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("hearts", val))
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("diamonds", val))
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("clubs", val))    
+    for val in range(2, 15):
+        deckObj.addCard(cardGame.card("spades", val))
+        
+#MAIN GAME LOOP
+    while (not done):
+        #Check for exit
+        for event in pygame.event.get():
+            if event.type == pygame.locals.QUIT:
+                pygame.quit()
+                exit()
     
-    # Displaying cards in hand
-    cardx1 = 200
-    cardy1 = 463
-    DISPLAYSURF.blit(C2, (cardx1, cardy1))
+        #Shuffle deck
+        deckObj.shuffle()
+        
+        try:
+            #Deal cards
+            for i in range(cardsNum):
+                player1.addCardToHand(deckObj.drawCard())
+                comPlayer2.addCardToHand(deckObj.drawCard())
+                comPlayer3.addCardToHand(deckObj.drawCard())
+                comPlayer4.addCardToHand(deckObj.drawCard())
+        except IndexError:
+            pass
+        
+        card1 = cardGame.card("clubs", 14)
+        card1.updateCardPosition(198, 461)
+        
+        #Update card positions
+        player1.hand[0].updateCardPosition(198, 461)
     
-    # Opponent's hands
-    opponent_cards(1, 10)
-    opponent_cards(2, 10)
-    opponent_cards(3, 10)
+        # Player's card spots
+        card_button(player1.hand[0], send_card_action)
+        #card_button(278, 461, send_card_action)
+        #card_button(358, 461, send_card_action)
+        #card_button(438, 461, send_card_action)
+        #card_button(518, 461, send_card_action)
+        #card_button(598, 461, send_card_action)
+        #card_button(678, 461, send_card_action)
+        #card_button(758, 461, send_card_action)
+        #card_button(838, 461, send_card_action)
+        #card_button(918, 461, send_card_action)
+        
+        # Displaying cards in hand
+        cardx1 = 200
+        cardy1 = 463
+        DISPLAYSURF.blit(player1.hand[0].displayCard(), (cardx1, cardy1))
+        
+        # Opponent's hands
+        opponent_cards(1, 10)
+        opponent_cards(2, 10)
+        opponent_cards(3, 10)
+        
+        # Opponent take their turn
+        opponent_play()
+        
+        # Trump Card
+        trump_card(C3)
+        
+        # Bottom toolbar
+        toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
+        newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
+        round = 10 # TEST
+        newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
+        newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
+        points = 100 # TEST
+        newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
+        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
+        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        
+        fpsClock.tick(60)
+        pygame.display.update()
+#*****************************************************************************    
     
-    # Opponent take their turn
-    opponent_play()
-    
-    # Trump Card
-    trump_card(C3)
-    
-    # Bottom toolbar
-    toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
-    newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
-    round = 10 # TEST
-    newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
-    newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
-    points = 100 # TEST
-    newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
-    newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
-    newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
-    
-    fpsClock.tick(60)
-    pygame.display.update()
-    
-    
-    
-    
+if __name__ == '__main__':
+    main()
+    exit()    
     
     
     
