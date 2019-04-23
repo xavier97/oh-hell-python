@@ -341,7 +341,58 @@ GRAY = (128, 128, 128)
 fps = 60
 fpsClock = pygame.time.Clock()
 
+# Player card's positions
+playerPositionDict = {'pos1' : (200, 463), 'pos2': (280, 463), 'pos3': (360, 463),
+                      'pos4' : (440, 463), 'pos5': (560, 463), 'pos6': (600, 463),
+                      'pos7' : (680, 463), 'pos8': (760, 463), 'pos9': (840, 463),
+                      'pos10': (920, 463)}
+
+
 # ----------------------------------------------
+
+class InputBox:
+
+    def __init__(self, x, y, w, h, text=''):
+        FONT = pygame.font.Font(None, 32)
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = GRAY
+        self.text = text
+        self.txt_surface = FONT.render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        print("inside")
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = RED if self.active else GRAY
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = FONT.render(self.text, True, self.color)
+
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(200, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Blit the rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
 
 # Initialization
 pygame.init()
@@ -473,11 +524,22 @@ def quit_action():
     pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218))
 # -----------------------------------------------------
 
+bid_input_box = InputBox(640, 720, 160, 50)
+input_boxes = [bid_input_box]
+
 while True: # main game loop
     for event in pygame.event.get():
         if event.type == pygame.locals.QUIT:
             pygame.quit()
             exit()
+        for box in input_boxes:
+            box.handle_event(event)
+                
+    for box in input_boxes:
+        box.update()
+
+    for box in input_boxes:
+        box.draw(DISPLAYSURF)
 
     card1 = Card(198, 461, "clubsAce")
 
@@ -517,6 +579,7 @@ while True: # main game loop
     newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
     points = 100 # TEST
     newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
+    newLabel("Your Bid:", 520, 640, 160, 50, BLACK, RED)
     newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
     newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
     
