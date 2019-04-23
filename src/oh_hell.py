@@ -358,10 +358,7 @@ class InputBox:
         self.active = False
 
     def handle_event(self, event):
-<<<<<<< HEAD
-=======
         FONT = pygame.font.Font(None, 32)
->>>>>>> 53cecf556808183f212d4427af3c06ccbc82ecc5
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
