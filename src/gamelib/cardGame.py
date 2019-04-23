@@ -148,9 +148,9 @@ class player:
         try:
             for index in range(len(self.hand)):
                 if self.hand[index].getCard() == name:
+                    print(self.hand[index].getCard() + " = " + name)
                     card = self.hand[index]
                     del self.hand[index]
-                    print("hello")
         except IndexError:
             return
         return card

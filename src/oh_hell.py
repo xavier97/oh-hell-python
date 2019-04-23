@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """    
-import pygame, sys, os, math, random
+import pygame, sys, os, math, random, time
 from pygame.locals import *
 from gamelib import cardGame
 
@@ -35,8 +35,19 @@ def viewField():
     print("---------------------------------")
 
 def showHand():
-    print("\n YOUR HAND:")
-    player1.viewHand()
+    count = 1
+    for card in player1.hand:
+        try:
+            DISPLAYSURF.blit(card.displayCard(), playerPositionDict.get('pos' + str(count)))
+            count += 1
+        except TypeError:
+            pass
+    #Delete after image of cards no longer in hand
+    while(count <= 10):
+        posx = playerPositionDict.get('pos' + str(count))[0]
+        posy = playerPositionDict.get('pos' + str(count))[1]
+        pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (posx, posy, 73, 97))
+        count += 1
 
 def computerTurn(comp):
     global fieldObj
@@ -322,13 +333,14 @@ YELLOW  = pygame.Color(255, 255, 0)
 BRIGHT_RED   = (255,0,0)
 BRIGHT_GREEN = (0,255,0)
 GRAY = (128, 128, 128)
+FELT_GREEN = (39, 119, 20)
 
 fps = 60
 fpsClock = pygame.time.Clock()
 
 # Player card's positions
 playerPositionDict = {'pos1' : (200, 463), 'pos2': (280, 463), 'pos3': (360, 463),
-                      'pos4' : (440, 463), 'pos5': (560, 463), 'pos6': (600, 463),
+                      'pos4' : (440, 463), 'pos5': (520, 463), 'pos6': (600, 463),
                       'pos7' : (680, 463), 'pos8': (760, 463), 'pos9': (840, 463),
                       'pos10': (920, 463)}
 
@@ -346,7 +358,6 @@ class InputBox:
         self.active = False
 
     def handle_event(self, event):
-        print("inside")
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
@@ -383,7 +394,7 @@ class InputBox:
 pygame.init()
 pygame.display.set_icon(icon_surf)
 DISPLAYSURF = pygame.display.set_mode((screen_width, screen_height))
-DISPLAYSURF.fill(BEIGE) # Background Color
+DISPLAYSURF.fill(FELT_GREEN) # Background Color
 pygame.display.set_caption('Oh Hell!')
 
 def text_objects(text, font, text_color=BLACK):
@@ -481,6 +492,7 @@ def trump_card(card_image):
     DISPLAYSURF.blit(card_image, (850, 45))
     
 def card_button(card, action=None):
+    card.updateCardPosition(198, 461) #Update card's position to center field
     w =  77
     h = 101
     x = card.posx
@@ -508,6 +520,7 @@ def newLabel(msg, x, y, w, h, background_color, text_color=BLACK):
 def send_card_action(card):
     DISPLAYSURF.blit(card.displayCard(), (560, 323))
     player1.discard(card.getCard())
+    time.sleep(0.25)
         
 def quit_action():
     pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218))
@@ -527,6 +540,7 @@ roundNum = 1
 cardsNum = 10
 trump = None
 done = False
+roundInProgress = False
 
 #*****************************************************************************
 #MAIN
@@ -560,24 +574,23 @@ def main():
             box.draw(DISPLAYSURF)
 
     
-        #Shuffle deck
-        deckObj.shuffle()
-        
-        try:
+        global roundInProgress
+        if(not roundInProgress):
+            #Shuffle deck
+            deckObj.shuffle()    
             #Deal cards
-            for i in range(cardsNum):
-                player1.addCardToHand(deckObj.drawCard())
-                comPlayer2.addCardToHand(deckObj.drawCard())
-                comPlayer3.addCardToHand(deckObj.drawCard())
-                comPlayer4.addCardToHand(deckObj.drawCard())
-        except IndexError:
-            pass
+            try:
+                for i in range(cardsNum):
+                    player1.addCardToHand(deckObj.drawCard())
+                    comPlayer2.addCardToHand(deckObj.drawCard())
+                    comPlayer3.addCardToHand(deckObj.drawCard())
+                    comPlayer4.addCardToHand(deckObj.drawCard())
+            except IndexError:
+                pass
+            roundInProgress = True
         
-        card1 = cardGame.card("clubs", 14)
-        card1.updateCardPosition(198, 461)
-        
-        #Update card positions
-        player1.hand[0].updateCardPosition(198, 461)
+        #card1 = cardGame.card("clubs", 14)
+        #card1.updateCardPosition(198, 461)
     
         # Player's card spots
         card_button(player1.hand[0], send_card_action)
@@ -592,9 +605,7 @@ def main():
         #card_button(918, 461, send_card_action)
         
         # Displaying cards in hand
-        cardx1 = 200
-        cardy1 = 463
-        DISPLAYSURF.blit(player1.hand[0].displayCard(), (cardx1, cardy1))
+        showHand()
         
         # Opponent's hands
         opponent_cards(1, 10)
