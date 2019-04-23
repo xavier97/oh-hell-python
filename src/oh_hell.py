@@ -46,7 +46,7 @@ def showHand():
     while(count <= 10):
         posx = playerPositionDict.get('pos' + str(count))[0]
         posy = playerPositionDict.get('pos' + str(count))[1]
-        pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (posx, posy, 73, 97))
+        pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (posx-2, posy-2, 77, 101))
         count += 1
 
 def computerTurn(comp):
@@ -61,7 +61,30 @@ def computerTurn(comp):
     else:
         cardPlayed = comp.discardBySuit(suitAsked)
         fieldObj.addCard(cardPlayed)
-        
+    
+    if(comp.playerID == 'p2'):
+        #Computer 2
+        angle = 90
+        #card = cardGame.card("diamonds", 14)
+        cardPlayed.updateCardPosition(439, 275)
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))
+    elif(comp.playerID == 'p3'):
+        #Computer 3
+        angle = 180
+        #card = cardGame.card("hearts", 2)
+        cardPlayed.updateCardPosition(560, 202)
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))
+    elif(comp.playerID == 'p4'):
+        #Computer 4
+        angle = 90
+        #card = cardGame.card("spades", 13)
+        cardPlayed.updateCardPosition(657, 275)
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))
+    
+         
 def playerTurn(player):
     global suitAsked
     validPlay = False
@@ -185,7 +208,7 @@ def p4StartBid():
 def playTrick():
     if(trickStarter == "p1"):
         print("You play first! Pick any card to start the trick")
-        showHand()
+        #showHand()
         playerTurn(player1)
         computerTurn(comPlayer2)
         computerTurn(comPlayer3)
@@ -195,22 +218,22 @@ def playTrick():
         computerTurn(comPlayer2)
         computerTurn(comPlayer3)
         computerTurn(comPlayer4)
-        viewField()
-        showHand()
+        #viewField()
+        #showHand()
         playerTurn(player1)
     elif(trickStarter == "p3"):
         print("Player 3 starts the trick")
         computerTurn(comPlayer3)
         computerTurn(comPlayer4)
-        viewField()
-        showHand()
+        #viewField()
+        #showHand()
         playerTurn(player1)
         computerTurn(comPlayer2)
     elif(trickStarter == "p4"):
         print("Player 4 starts the trick")
         computerTurn(comPlayer4)
-        viewField()
-        showHand()
+        #viewField()
+        #showHand()
         playerTurn(player1)
         computerTurn(comPlayer2)
         computerTurn(comPlayer3)
@@ -489,15 +512,16 @@ def opponent_play():
     
 def trump_card(card_image):
     newLabel("", 845, 40, 83, 107, RED)
-    newLabel("Trump Card", 820, 152, 140, 30, RED)
+    newLabel("Trump Suit", 820, 152, 140, 30, RED)
     DISPLAYSURF.blit(card_image, (850, 45))
     
-def card_button(card, action=None):
-    card.updateCardPosition(198, 461) #Update card's position to center field
+def card_button(card, position, action=None):
+    #card.updateCardPosition(198, 461) #Update card's position 
+    card.updateCardPosition(playerPositionDict.get(position))
     w =  77
     h = 101
-    x = card.posx
-    y = card.posy
+    x = card.posx-2
+    y = card.posy-2
     pygame.draw.rect(DISPLAYSURF, BEIGE, (x , y , w , h)) # display button frame
 
     mouse = pygame.mouse.get_pos() # Get mouse's location
@@ -520,7 +544,7 @@ def newLabel(msg, x, y, w, h, background_color, text_color=BLACK):
 # ------------------- ACTION EVENTS -------------------
 def send_card_action(card):
     DISPLAYSURF.blit(card.displayCard(), (560, 323))
-    player1.discard(card.getCard())
+    fieldObj.addCard(player1.discard(card.getCard()))
     time.sleep(0.25)
         
 def quit_action():
@@ -584,21 +608,23 @@ def main():
             except IndexError:
                 pass
             roundInProgress = True
+            #Choose Trump
+            trumpCard = random.choice(deckObj.mydeck)
         
-        #card1 = cardGame.card("clubs", 14)
-        #card1.updateCardPosition(198, 461)
-    
-        # Player's card spots
-        card_button(player1.hand[0], send_card_action)
-        #card_button(278, 461, send_card_action)
-        #card_button(358, 461, send_card_action)
-        #card_button(438, 461, send_card_action)
-        #card_button(518, 461, send_card_action)
-        #card_button(598, 461, send_card_action)
-        #card_button(678, 461, send_card_action)
-        #card_button(758, 461, send_card_action)
-        #card_button(838, 461, send_card_action)
-        #card_button(918, 461, send_card_action)
+        #Generate card buttons
+        try:        
+            card_button(player1.hand[0], 'pos1', send_card_action)
+            card_button(player1.hand[1], 'pos2', send_card_action)
+            card_button(player1.hand[2], 'pos3', send_card_action)
+            card_button(player1.hand[3], 'pos4', send_card_action)
+            card_button(player1.hand[4], 'pos5', send_card_action)
+            card_button(player1.hand[5], 'pos6', send_card_action)
+            card_button(player1.hand[6], 'pos7', send_card_action)
+            card_button(player1.hand[7], 'pos8', send_card_action)
+            card_button(player1.hand[8], 'pos9', send_card_action)
+            card_button(player1.hand[9], 'pos10', send_card_action)
+        except IndexError:
+            pass
         
         # Displaying cards in hand
         showHand()
@@ -609,10 +635,10 @@ def main():
         opponent_cards(3, 10)
         
         # Opponent take their turn
-        opponent_play()
+        #opponent_play()
         
         # Trump Card
-        trump_card(C3)
+        trump_card(trumpCard.displayCard())
         
         # Bottom toolbar
         toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
@@ -633,7 +659,14 @@ def main():
         fpsClock.tick(60)
         pygame.display.update()
 #*****************************************************************************    
-    
+
+def TRICK_GAME_LOOP():
+    #TRICK GAME LOOP
+    for i in range(cardsNum):
+        playTrick()
+        resolveTrick()
+        
+           
 if __name__ == '__main__':
     main()
     exit()    

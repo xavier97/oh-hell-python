@@ -48,9 +48,9 @@ class card:
     def getTagID(self):
         return self.playerID
     
-    def updateCardPosition(self, x, y):
-        self.posx = x
-        self.posy = y
+    def updateCardPosition(self, coordTuple):
+        self.posx = coordTuple[0]
+        self.posy = coordTuple[1]
         
     def displayCard(self):
         path = os.path.join('../assets/images/cards', self.cardName + '.gif')
@@ -73,7 +73,7 @@ class deck:
         return card
     
     def flipCard(self):
-        return self.mydeck[0].getCard()
+        return self.mydeck[0]
     
     def toStringDeck(self):
         decklist = []
