@@ -156,8 +156,7 @@ class player:
         except IndexError:
             return
         
-        return card
-    
+        return card   
     
     
     

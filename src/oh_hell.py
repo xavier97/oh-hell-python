@@ -225,12 +225,22 @@ def p4StartBid():
             break
 #*****************************************************************************
 #*****************************************************************************
-    
+def trickResolveCooldown():
+    global cooldownInProgress, last, doneWithTurn
+    if(not cooldownInProgress):
+        last = pygame.time.get_ticks()
+        cooldownInProgress = True
+    else:
+        now = pygame.time.get_ticks()
+        if((now - last) >= 3000):
+            resolveTrick()
+            #doneWithTurn = False
+            cooldownInProgress = False
+            
 def playTrick(starter):
-    global playerTurn
-    global doneWithTurn
-    global waiting
-    if(playerTurn == 'p1'):
+    global playerTurn, doneWithTurn, waiting
+    
+    if(playerTurn == 'p1' and not doneWithTurn):
         try:
             #Generate card buttons
             for i in range(len(player1.hand)):
@@ -249,15 +259,17 @@ def playTrick(starter):
         #playerTurn = 'p1'
         waiting = True
         
-    if(starter == 'p1' and playerTurn == 'p4'):
-        resolveTrick()
+    if(starter == 'p1' and playerTurn == 'p4'): #and waiting == True
+        #resolveTrick()
+        trickResolveCooldown()
     elif(starter == 'p2' and playerTurn == 'p1' and doneWithTurn == True):
-        resolveTrick()
-        doneWithTurn = False
-    elif(starter == 'p3' and playerTurn == 'p2'):
-        resolveTrick()
-    elif(starter == 'p4' and playerTurn == 'p3'):
-        resolveTrick()
+        trickResolveCooldown()
+    elif(starter == 'p3' and playerTurn == 'p2'):#and waiting == True
+        #resolveTrick()
+        trickResolveCooldown()
+    elif(starter == 'p4' and playerTurn == 'p3'):#and waiting == True
+        #resolveTrick()
+        trickResolveCooldown()
 
 def resolveTrick():
     global suitAsked
@@ -266,11 +278,13 @@ def resolveTrick():
     winningCard = None
     for card in fieldObj.mydeck:
         #If card is trump
-        if(card.getSuit() == trump):
+        if(card.getSuit() == trumpSuit):
+            print("TRUMP CARD")
             #If current winning card isn't trump automatic win
-            if(winningSuit != trump):
+            print(winningSuit + " != " + trumpSuit)
+            if(winningSuit != trumpSuit):
                 winningCard = card
-                winningSuit = trump
+                winningSuit = trumpSuit
                 winningVal = card.getVal()
             #If current winning card is also trump check values 
             elif(card.getVal() > winningVal):
@@ -278,9 +292,10 @@ def resolveTrick():
                 winningVal = card.getVal()
         #If card is suit asked
         elif(card.getSuit() == suitAsked):
-            if((winningSuit != trump) and (card.getVal() > winningVal)):
+            if((winningSuit != trumpSuit) and (card.getVal() > winningVal)):
                 winningCard = card
                 winningVal = card.getVal()
+        print("Winning card: " + winningCard.getCard())
    
     #Check which player played the winning card and give them the trick             
     if(player1.getPlayerID() == winningCard.getTagID()):
@@ -303,11 +318,14 @@ def resolveTrick():
     global trickStarter
     global playerTurn
     global firstTrickOfRound
+    global doneWithTurn, waiting
+    doneWithTurn = False
+    waiting = False
     if(firstTrickOfRound):
         firstTrickOfRound = False
     trickStarter = winningCard.getTagID()
     playerTurn = trickStarter
-    print("*** " + trickStarter + " won the trick! ***")
+    print("*** " + playerTurn + " won the trick! ***")
     print("Computer hand: " + str(len(comPlayer2.hand)))
     print("END OF TRICK")
     print("************************************")
@@ -561,6 +579,7 @@ def card_button(card, position, index, action=None):
         pygame.draw.rect(DISPLAYSURF, BRIGHT_RED, (x, y, w, h))
         if click[0] == 1 and action != None:
             if(checkValidity(card, index)):
+                print("p1 played the " + card.getCard())
                 send_card_action(card)
     else:
         pygame.draw.rect(DISPLAYSURF, BEIGE, (x, y, w, h))
@@ -579,7 +598,7 @@ def send_card_action(card):
     global playerTurn
     global doneWithTurn
     doneWithTurn = True
-    playerTurn = 'p2'
+    #playerTurn = 'p2'
     time.sleep(0.25)
     
 def clean_field_action():
@@ -613,7 +632,7 @@ comPlayer4 = cardGame.player("p4")
 suitAsked = None
 roundNum = 1
 cardsNum = 10
-trump = None
+trumpSuit = None
 GAMEOVER = False
 
 '''IMPORTANT GAME FLOW GLOBALS'''
@@ -624,6 +643,7 @@ trickStarter = "p2"     #keeps track of who starts the next trick
 playerTurn = "p2"       #Whoose turn is it currently
 doneWithTurn = False    #For p1 only!!
 waiting = False         #After computer finish turn wait for NEXT ACTION
+cooldownInProgress = False
 #*****************************************************************************
 #MAIN
 #*****************************************************************************
@@ -668,8 +688,11 @@ def main():
                     comPlayer4.addCardToHand(deckObj.drawCard())
             except IndexError:
                 pass
+            
+            global trumpSuit
             #Choose Trump
             trumpCard = random.choice(deckObj.mydeck)
+            trumpSuit = trumpCard.getSuit() 
             
             #TODO
             #set up bidding system
@@ -705,10 +728,24 @@ def main():
             
             # Displaying cards in hand
             showHand()
+            
+            global cooldownInProgress
+            #NEXT BUTTON
             if(playerTurn != 'p1'):
                 newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+            elif(not doneWithTurn):
+                #newLabel("", 1025, 490, 90, 50, FELT_GREEN, FELT_GREEN)
+                pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (1025, 490, 90, 50))
             else:
-                newLabel("", 1025, 490, 90, 50, FELT_GREEN, FELT_GREEN)
+                newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+                
+            if(cooldownInProgress):
+                pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (1025, 490, 90, 50))
+            
+            #GLOBAL VARIABLES DISPLAY
+            newLabel("cooldownInProgress: " + str(cooldownInProgress) + "      TrickStater: " + trickStarter 
+                     + "      PlayerTurn: " + playerTurn + "      P1 turn done: " + str(doneWithTurn) 
+                     + "      Waiting: " + str(waiting), 0, 0, 1280, 40, BLACK, RED)
                 
         
         # Opponent's hands
