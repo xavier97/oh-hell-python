@@ -140,19 +140,22 @@ class player:
     def discardBySuit(self, suitAsked):
         for index in range(len(self.hand)):
             if(self.hand[index].getSuit() == suitAsked):
-                return self.discard(index)
-        return self.discard(random.choice(range(len(self.hand))))            
+                return self.discard(self.hand[index].getCard())
+        randIndex = random.choice(range(len(self.hand)))
+        return self.discard(self.hand[randIndex].getCard())            
     
     #Discards specified card         
     def discard(self, name):
         try:
             for index in range(len(self.hand)):
                 if self.hand[index].getCard() == name:
-                    print(self.hand[index].getCard() + " = " + name)
+                    #print(self.hand[index].getCard() + " = " + name)
                     card = self.hand[index]
                     del self.hand[index]
+                    break
         except IndexError:
             return
+        
         return card
     
     
