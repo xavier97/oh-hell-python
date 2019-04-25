@@ -138,12 +138,14 @@ def checkValidity(card, index):
 #*****************************************************************************    
 def playerBid(player):
     while(True):
-        bid = int(input("\nEnter your bid for this round: "))
-        if((bid >= 0) and (bid <= cardsNum)):
+        #bid = int(input("\nEnter your bid for this round: "))
+        pygame.display.update(pygame.Rect(0, 630, 1280, 70))
+        if((player.bid >= 0) and (player.bid <= cardsNum)):
             break
         else:
-            print("Error: Please enter bid between 0 and " + str(cardsNum))
-    player1.setBid(bid)
+            #print("Error: Please enter bid between 0 and " + str(cardsNum))
+            pass
+    #player1.setBid(bid)
 
 def p1StartBid():
     playerBid(player1)
@@ -400,50 +402,6 @@ playerPositionDict = {'pos1' : (200, 463), 'pos2': (280, 463), 'pos3': (360, 463
 
 # ----------------------------------------------
 
-class InputBox:
-
-    def __init__(self, x, y, w, h, text=''):
-        FONT = pygame.font.Font(None, 32)
-        self.rect = pygame.Rect(x, y, w, h)
-        self.color = GRAY
-        self.text = text
-        self.txt_surface = FONT.render(text, True, self.color)
-        self.active = False
-
-    def handle_event(self, event):
-        FONT = pygame.font.Font(None, 32)
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            # If the user clicked on the input_box rect.
-            if self.rect.collidepoint(event.pos):
-                # Toggle the active variable.
-                self.active = not self.active
-            else:
-                self.active = False
-            # Change the current color of the input box.
-            self.color = RED if self.active else GRAY
-        if event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_RETURN:
-                    print(self.text)
-                    self.text = ''
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                # Re-render the text.
-                self.txt_surface = FONT.render(self.text, True, self.color)
-
-    def update(self):
-        # Resize the box if the text is too long.
-        width = max(40, self.txt_surface.get_width()+10)
-        self.rect.w = width
-
-    def draw(self, screen):
-        # Blit the text.
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
-        # Blit the rect.
-        pygame.draw.rect(screen, self.color, self.rect, 2)
-
 # Initialization
 pygame.init()
 pygame.display.set_icon(icon_surf)
@@ -601,6 +559,52 @@ def next_action():
         playerTurn = 'p1'
     waiting = False
     time.sleep(0.25)
+    
+# -----------------------------------------------------
+class InputBox:
+
+    def __init__(self, x, y, w, h, text=''):
+        FONT = pygame.font.Font(None, 32)
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = GRAY
+        self.text = text
+        self.txt_surface = FONT.render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        FONT = pygame.font.Font(None, 32)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = RED if self.active else GRAY
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    player1.setBid(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = FONT.render(self.text, True, self.color)
+
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(40, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Blit the rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
 # -----------------------------------------------------
 #GLOBALS
 #-----------------------------------------------------------------------------
@@ -638,7 +642,8 @@ def main():
     for val in range(2, 15):
         deckObj.addCard(cardGame.card("spades", val))
         
-    bid_input_box = InputBox(640, 640, 40, 40) # note make 600 -> 720
+    bid_input_box = InputBox(640, 640, 40, 40)
+    global input_boxes 
     input_boxes = [bid_input_box]    
 
     #playerTurnThread = threading.Thread(target=playerTurn, args=(player1,))
@@ -651,8 +656,23 @@ def main():
                 exit()
             for box in input_boxes:
                 box.handle_event(event)
+                
+        # Bottom toolbar
+        toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
+        newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
+        round = 10 # TEST
+        newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
+        newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
+        points = 100 # TEST
+        newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
+        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
+        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
+        for box in input_boxes:
+            box.update()
+        for box in input_boxes:
+            box.draw(DISPLAYSURF)
 
-    
         '''ROUND NOT IN PROGRESS '''
         global roundInProgress
         if(not roundInProgress):
@@ -673,6 +693,15 @@ def main():
             
             #TODO
             #set up bidding system
+            global roundStarter
+            if (roundStarter == 'p2'):
+                p2StartBid()
+            elif (roundStarter == 'p3'):
+                p3StartBid()
+            elif (roundStarter == 'p4'):
+                p4StartBid()
+            else:
+                p1StartBid()
             
             #Setup complete! Round now in progress
             roundInProgress = True
@@ -683,7 +712,7 @@ def main():
             global firstTrickOfRound
             if(firstTrickOfRound):
                 
-                global roundStarter
+                #global roundStarter
                 if(roundStarter == 'p1'):
                     playTrick(roundStarter)
                 elif(roundStarter == 'p2'):
@@ -722,24 +751,10 @@ def main():
         # Trump Card
         trump_card(trumpCard.displayCard())
         
-        # Bottom toolbar
-        toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
-        newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
-        round = 10 # TEST
-        newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
-        newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
-        points = 100 # TEST
-        newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
-        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
-        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
-        newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
-        for box in input_boxes:
-            box.update()
-        for box in input_boxes:
-            box.draw(DISPLAYSURF)
-        
         fpsClock.tick(60)
-        pygame.display.update()
+        #mainDisplay = pygame.Rect(0, 0, 1280, 630)
+        #pygame.display.update(mainDisplay)
+        pygame.display.flip()
 #*****************************************************************************    
                  
 if __name__ == '__main__':
