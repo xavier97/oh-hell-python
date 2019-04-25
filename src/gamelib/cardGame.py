@@ -4,9 +4,12 @@ Created on Fri Apr 12 11:58:48 2019
 
 @author: Nicholas
 """
-import random
+import random, os, pygame
 
 class card:
+    posx = 0
+    posy = 0
+    
     def __init__(self, s, val):
         if(val < 11):
             name = s + str(val)
@@ -32,12 +35,27 @@ class card:
     def getVal(self):
         return self.value
     
+    def getPosx(self):
+        return self.posx
+    
+    def getPosy(self):
+        return self.posy
+    
     #Keep track of who played the card
     def setTagID(self, ID):
         self.playerID = ID
         
     def getTagID(self):
         return self.playerID
+    
+    def updateCardPosition(self, coordTuple):
+        self.posx = coordTuple[0]
+        self.posy = coordTuple[1]
+        
+    def displayCard(self):
+        path = os.path.join('../assets/images/cards', self.cardName + '.gif')
+        card_image = pygame.image.load(path)
+        return card_image
         
 class deck:
     def __init__(self):
@@ -55,7 +73,7 @@ class deck:
         return card
     
     def flipCard(self):
-        return self.mydeck[0].getCard()
+        return self.mydeck[0]
     
     def toStringDeck(self):
         decklist = []
@@ -122,11 +140,26 @@ class player:
     def discardBySuit(self, suitAsked):
         for index in range(len(self.hand)):
             if(self.hand[index].getSuit() == suitAsked):
-                return self.discard(index)
-        return self.discard(random.choice(range(len(self.hand))))            
+                return self.discard(self.hand[index].getCard())
+        randIndex = random.choice(range(len(self.hand)))
+        return self.discard(self.hand[randIndex].getCard())            
     
     #Discards specified card         
-    def discard(self, index):
-        card = self.hand[index]
-        del self.hand[index]
-        return card 
+    def discard(self, name):
+        try:
+            for index in range(len(self.hand)):
+                if self.hand[index].getCard() == name:
+                    #print(self.hand[index].getCard() + " = " + name)
+                    card = self.hand[index]
+                    del self.hand[index]
+                    break
+        except IndexError:
+            return
+        
+        return card   
+    
+    
+    
+    
+    
+    

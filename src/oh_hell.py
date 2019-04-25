@@ -4,44 +4,35 @@ Spyder Editor
 
 This is a temporary script file.
 """    
-import pygame, sys, os, math, random
+import pygame, sys, os, math, random, time
 from pygame.locals import *
-from gameLib import cardGame
+from gamelib import cardGame
 
-class Card:
-    card_name = ""
-    posx = 0
-    posy = 0
-    
-    def __init__(self, posx, posy, card_name):
-        self.posx = posx
-        self.posy = posy
-        self.card_name = card_name
-    
-    def display_card(self):
-        path = os.path.join('../assets/images/cards', self.card_name + '.gif')
-        card_image = pygame.image.load(path)
-        return card_image
-    
 #GAMEPLAY LOGIC FUNCTIONS
 #-----------------------------------------------------------------------------
-def viewField():
-    print("\nFIELD: \n---------------------------------")
-    fieldObj.toStringDeck()
-    print("Suit asked: " + suitAsked.upper())
-    print("Trump: " + trump.upper())
-    print("---------------------------------")
-
 def showHand():
-    print("\n YOUR HAND:")
-    player1.viewHand()
+    count = 1
+    for card in player1.hand:
+        try:
+            DISPLAYSURF.blit(card.displayCard(), playerPositionDict.get('pos' + str(count)))
+            count += 1
+        except TypeError:
+            pass
+    #Delete after image of cards no longer in hand
+    while(count <= 10):
+        posx = playerPositionDict.get('pos' + str(count))[0]
+        posy = playerPositionDict.get('pos' + str(count))[1]
+        pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (posx-2, posy-2, 77, 101))
+        count += 1
 
 def computerTurn(comp):
     global fieldObj
     global suitAsked
     #If first card played then pick random card from hand to play
     if(suitAsked == None):
-        cardPlayed = comp.discard(random.choice(range(len(comp.hand))))
+        randIndex = random.choice(range(len(comp.hand)))
+        #print("random index: " + str(randIndex))
+        cardPlayed = comp.discard(comp.hand[randIndex].getCard())
         fieldObj.addCard(cardPlayed)
         suitAsked = cardPlayed.getSuit()
     #Else discard by suit asked
@@ -49,44 +40,53 @@ def computerTurn(comp):
         cardPlayed = comp.discardBySuit(suitAsked)
         fieldObj.addCard(cardPlayed)
         
-def playerTurn(player):
-    global suitAsked
-    validPlay = False
-    #Check if play is valid
-    while(not validPlay):
-        validCard = False
-        #Check if card choice is valid
-        while(not validCard):
-            cardChoice = int(input("Enter card to play: "))
-            if((cardChoice < 0) or (cardChoice > len(player.hand)-1)):
-                print("Error: Input not in range of hand")
-            else:
-                validCard = True
-        
-        #If first card played then card choice is automatically valid
-        if(suitAsked == None):
-            suitAsked = player.hand[cardChoice].getSuit()
-            break
-            
-        validPlay = player.checkPlay(cardChoice, suitAsked)
-        if(not validPlay):
-            print("Play is not valid. Must play suit asked!")
-     
+    print(comp.getPlayerID() + " played the  " + cardPlayed.getCard())
     
-    #Discard from hand and add card to field
-    fieldObj.addCard(player.discard(cardChoice))
+    if(comp.playerID == 'p2'):
+        #Computer 2
+        angle = 90
+        #card = cardGame.card("diamonds", 14)
+        cardPlayed.updateCardPosition((439, 275))
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))
+    elif(comp.playerID == 'p3'):
+        #Computer 3
+        angle = 180
+        #card = cardGame.card("hearts", 2)
+        cardPlayed.updateCardPosition((560, 202))
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))
+    elif(comp.playerID == 'p4'):
+        #Computer 4
+        angle = 90
+        #card = cardGame.card("spades", 13)
+        cardPlayed.updateCardPosition((657, 275))
+        rotated_card = pygame.transform.rotate(cardPlayed.displayCard(), angle)
+        DISPLAYSURF.blit(rotated_card, (cardPlayed.posx, cardPlayed.posy))   
+
+#Checks the validity of a play
+def checkValidity(card, index):
+    global suitAsked
+    #If first card played then card choice is automatically valid
+    if(suitAsked == None):
+        suitAsked = card.getSuit()
+        return True
+            
+    return player1.checkPlay(index, suitAsked)
 
 #BIDDING
 #*****************************************************************************
 #*****************************************************************************    
 def playerBid(player):
     while(True):
-        bid = int(input("\nEnter your bid for this round: "))
-        if((bid >= 0) and (bid <= cardsNum)):
+        #bid = int(input("\nEnter your bid for this round: "))
+        pygame.display.update(pygame.Rect(0, 630, 1280, 70))
+        if((player.bid >= 0) and (player.bid <= cardsNum)):
             break
         else:
-            print("Error: Please enter bid between 0 and " + str(cardsNum))
-    player1.setBid(bid)
+            #print("Error: Please enter bid between 0 and " + str(cardsNum))
+            pass
+    #player1.setBid(bid)
 
 def p1StartBid():
     playerBid(player1)
@@ -168,52 +168,66 @@ def p4StartBid():
             break
 #*****************************************************************************
 #*****************************************************************************
-    
-def playTrick():
-    if(trickStarter == "p1"):
-        print("You play first! Pick any card to start the trick")
-        showHand()
-        playerTurn(player1)
-        computerTurn(comPlayer2)
-        computerTurn(comPlayer3)
-        computerTurn(comPlayer4)
-    elif(trickStarter == "p2"):
-        print("Player 2 starts the trick")
-        computerTurn(comPlayer2)
-        computerTurn(comPlayer3)
-        computerTurn(comPlayer4)
-        viewField()
-        showHand()
-        playerTurn(player1)
-    elif(trickStarter == "p3"):
-        print("Player 3 starts the trick")
-        computerTurn(comPlayer3)
-        computerTurn(comPlayer4)
-        viewField()
-        showHand()
-        playerTurn(player1)
-        computerTurn(comPlayer2)
-    elif(trickStarter == "p4"):
-        print("Player 4 starts the trick")
-        computerTurn(comPlayer4)
-        viewField()
-        showHand()
-        playerTurn(player1)
-        computerTurn(comPlayer2)
-        computerTurn(comPlayer3)
+#System waits 3 seconds before clearing field and resolving trick
+def trickResolveCooldown():
+    global cooldownInProgress, last, doneWithTurn
+    if(not cooldownInProgress):
+        last = pygame.time.get_ticks()
+        cooldownInProgress = True
+    else:
+        now = pygame.time.get_ticks()
+        if((now - last) >= 3000): #wait 3 seconds
+            resolveTrick()
+            #doneWithTurn = False
+            cooldownInProgress = False
+            
+def playTrick(starter):
+    global playerTurn, doneWithTurn, waiting
         
+    #If it's p1's turn and they have not selected a card yet
+    if(playerTurn == 'p1' and not doneWithTurn):
+        try:
+            #Generate card buttons
+            for i in range(len(player1.hand)):
+                card_button(player1.hand[i], 'pos'+str(i+1), i, send_card_action)
+        except IndexError: pass
+    elif(playerTurn == 'p2' and not waiting and not cooldownInProgress):
+        computerTurn(comPlayer2)
+        waiting = True #Wait for user to click next button
+    elif(playerTurn == 'p3' and not waiting and not cooldownInProgress):
+        computerTurn(comPlayer3)
+        waiting = True
+    elif(playerTurn == 'p4' and not waiting and not cooldownInProgress):
+        computerTurn(comPlayer4)
+        waiting = True
+        
+    #If every player has had a turn then the trick is over
+    if(starter == 'p1' and playerTurn == 'p4'):
+        trickResolveCooldown()
+    elif(starter == 'p2' and playerTurn == 'p1' and doneWithTurn == True):
+        trickResolveCooldown()
+    elif(starter == 'p3' and playerTurn == 'p2'):
+        trickResolveCooldown()
+    elif(starter == 'p4' and playerTurn == 'p3'):
+        trickResolveCooldown()
+
+#Resolves the trick
 def resolveTrick():
     global suitAsked
     winningSuit = suitAsked
     winningVal = 0
     winningCard = None
+    
+    #Find which card wins the trick
     for card in fieldObj.mydeck:
         #If card is trump
-        if(card.getSuit() == trump):
+        if(card.getSuit() == trumpSuit):
+            print("TRUMP CARD")
             #If current winning card isn't trump automatic win
-            if(winningSuit != trump):
+            print(winningSuit + " != " + trumpSuit)
+            if(winningSuit != trumpSuit):
                 winningCard = card
-                winningSuit = trump
+                winningSuit = trumpSuit
                 winningVal = card.getVal()
             #If current winning card is also trump check values 
             elif(card.getVal() > winningVal):
@@ -221,9 +235,10 @@ def resolveTrick():
                 winningVal = card.getVal()
         #If card is suit asked
         elif(card.getSuit() == suitAsked):
-            if((winningSuit != trump) and (card.getVal() > winningVal)):
+            if((winningSuit != trumpSuit) and (card.getVal() > winningVal)):
                 winningCard = card
                 winningVal = card.getVal()
+        print("Winning card: " + winningCard.getCard())
    
     #Check which player played the winning card and give them the trick             
     if(player1.getPlayerID() == winningCard.getTagID()):
@@ -238,16 +253,30 @@ def resolveTrick():
     #Send cards in field back to deck
     for i in range(4):
         deckObj.addCard(fieldObj.drawCard())
+        
+    #Clear the visible field
+    pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (439 , 202, 315, 218))
     
     #Player who won trick starts next round
+    #Reset global trick variables
     global trickStarter
+    global playerTurn
+    global firstTrickOfRound
+    global doneWithTurn, waiting
+    doneWithTurn = False
+    waiting = False
+    if(firstTrickOfRound):
+        firstTrickOfRound = False
     trickStarter = winningCard.getTagID()
-    print("*** " + trickStarter + " won the trick! ***")
+    playerTurn = trickStarter
+    print("*** " + playerTurn + " won the trick! ***")
+    print("Computer hand: " + str(len(comPlayer2.hand)))
     print("END OF TRICK")
     print("************************************")
     #Reset suitAsked
     suitAsked = None
-     
+
+#Counts points, clears tricks, and moves starting player to the left     
 def resolveRound():
     #Check if bids match number of tricks won. If they do give that player points
     if(player1.getTricks() == player1.getBid()):
@@ -265,20 +294,23 @@ def resolveRound():
     comPlayer4.clearTricks()
     
     #Move starting player to the left for next round
-    global roundStarter
-    global trickStarter
+    global roundStarter, trickStarter, playerTurn
     if(roundStarter == "p1"):
         roundStarter = "p2"
         trickStarter = "p2"
+        playerTurn = "p2"
     elif(roundStarter == "p2"):
         roundStarter = "p3"
         trickStarter = "p3"
+        playerTurn = "p3"
     elif(roundStarter == "p3"):
         roundStarter = "p4"
         trickStarter = "p4"
+        playerTurn = "p4"
     elif(roundStarter == "p4"):
         roundStarter = "p1"
         trickStarter = "p1"
+        playerTurn = "p1"
         
     
     print("LEADERBOARD:")
@@ -288,23 +320,6 @@ def resolveRound():
     print("Player4: " + str(comPlayer4.getPoints()))
     print("************************************")
 #-----------------------------------------------------------------------------       
-        
-#GLOBALS
-#-----------------------------------------------------------------------------
-deckObj = cardGame.deck()
-fieldObj = cardGame.deck()
-player1 = cardGame.player("p1")
-comPlayer2 = cardGame.player("p2")
-comPlayer3 = cardGame.player("p3")
-comPlayer4 = cardGame.player("p4")
-trickStarter = "p2" #keeps track of who starts the next trick
-roundStarter = "p2" #Player2 starts round 1
-suitAsked = None
-roundNum = 1
-cardsNum = 13
-trump = None
-done = False
-#-----------------------------------------------------------------------------
 
 # ------------------- ASSETS -------------------
 # Window set-up
@@ -313,8 +328,8 @@ screen_height = 700
 
 # Image Locations
 DEFAULT_ICON = os.path.join('../assets/images/', 'icon-fire.png')
-C2_PATH = os.path.join('../assets/images/cards', 'C2.gif')
-C3_PATH = os.path.join('../assets/images/cards', 'C3.gif')
+C2_PATH = os.path.join('../assets/images/cards', 'clubs2.gif')
+C3_PATH = os.path.join('../assets/images/cards', 'clubs3.gif')
 BACK_PATH = os.path.join('../assets/images/cards', 'back.gif')
 
 # Load Images
@@ -337,9 +352,17 @@ YELLOW  = pygame.Color(255, 255, 0)
 BRIGHT_RED   = (255,0,0)
 BRIGHT_GREEN = (0,255,0)
 GRAY = (128, 128, 128)
+FELT_GREEN = (39, 119, 20)
 
 fps = 60
 fpsClock = pygame.time.Clock()
+
+# Player card's positions
+playerPositionDict = {'pos1' : (200, 463), 'pos2': (280, 463), 'pos3': (360, 463),
+                      'pos4' : (440, 463), 'pos5': (520, 463), 'pos6': (600, 463),
+                      'pos7' : (680, 463), 'pos8': (760, 463), 'pos9': (840, 463),
+                      'pos10': (920, 463)}
+
 
 # ----------------------------------------------
 
@@ -347,7 +370,7 @@ fpsClock = pygame.time.Clock()
 pygame.init()
 pygame.display.set_icon(icon_surf)
 DISPLAYSURF = pygame.display.set_mode((screen_width, screen_height))
-DISPLAYSURF.fill(BEIGE) # Background Color
+DISPLAYSURF.fill(FELT_GREEN) # Background Color
 pygame.display.set_caption('Oh Hell!')
 
 def text_objects(text, font, text_color=BLACK):
@@ -413,39 +436,19 @@ def opponent_cards(opponent_id, opponent_num_cards):
         DISPLAYSURF.blit(newBack, (600, 45))
         DISPLAYSURF.blit(newBack, (640, 45))
         DISPLAYSURF.blit(newBack, (680, 45))
-    
-def opponent_play():
-    opponent_card_list = ["DA", "H2", "SK"] # cards each opponent chose to play
-    
-    # Opponent 1
-    angle = 90
-    card = Card(439, 275, opponent_card_list[0])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
-    DISPLAYSURF.blit(new_card, (card.posx, card.posy))
-    
-    # Opponent 2
-    angle = 180
-    card = Card(560, 202, opponent_card_list[1])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
-    DISPLAYSURF.blit(new_card, (card.posx, card.posy))
-    
-    # Opponent 3
-    angle = 90
-    card = Card(657, 275, opponent_card_list[2])
-    new_card = pygame.transform.rotate(card.display_card(), angle)
-    DISPLAYSURF.blit(new_card, (card.posx, card.posy))
-    
-    
+ 
 def trump_card(card_image):
     newLabel("", 845, 40, 83, 107, RED)
-    newLabel("Trump Card", 820, 152, 140, 30, RED)
+    newLabel("Trump Suit", 820, 152, 140, 30, RED)
     DISPLAYSURF.blit(card_image, (850, 45))
     
-def card_button(card, action=None):
+def card_button(card, position, index, action=None):
+    #card.updateCardPosition(198, 461) #Update card's position 
+    card.updateCardPosition(playerPositionDict.get(position))
     w =  77
     h = 101
-    x = card.posx
-    y = card.posy
+    x = card.posx-2
+    y = card.posy-2
     pygame.draw.rect(DISPLAYSURF, BEIGE, (x , y , w , h)) # display button frame
 
     mouse = pygame.mouse.get_pos() # Get mouse's location
@@ -454,7 +457,9 @@ def card_button(card, action=None):
     if x + w > mouse[0] > x and y + h > mouse[1] > y:
         pygame.draw.rect(DISPLAYSURF, BRIGHT_RED, (x, y, w, h))
         if click[0] == 1 and action != None:
-            send_card_action(card)
+            if(checkValidity(card, index)):
+                print("p1 played the " + card.getCard())
+                send_card_action(card)
     else:
         pygame.draw.rect(DISPLAYSURF, BEIGE, (x, y, w, h))
 
@@ -467,65 +472,289 @@ def newLabel(msg, x, y, w, h, background_color, text_color=BLACK):
     
 # ------------------- ACTION EVENTS -------------------
 def send_card_action(card):
-    DISPLAYSURF.blit(card.display_card(), (560, 323))
+    DISPLAYSURF.blit(card.displayCard(), (560, 323))
+    fieldObj.addCard(player1.discard(card.getCard()))
+    global playerTurn
+    global doneWithTurn
+    doneWithTurn = True
+    #playerTurn = 'p2'
+    time.sleep(0.25)
+    
+def clean_field_action():
+    pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (439 , 202, 315, 218))
         
 def quit_action():
-    pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218))
+    #pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218)
+    pygame.quit()
+    exit()
+
+#Next button action
+#Change player turn
+def next_action():
+    global playerTurn
+    global waiting
+    #not cooldown protects against button spamming (would break otherwise)
+    if(playerTurn == 'p1' and not cooldownInProgress):
+        playerTurn = 'p2'
+    elif(playerTurn == 'p2' and not cooldownInProgress):
+        playerTurn = 'p3'
+    elif(playerTurn == 'p3' and not cooldownInProgress):
+        playerTurn = 'p4'
+    elif(playerTurn == 'p4' and not cooldownInProgress ):
+        playerTurn = 'p1'
+    waiting = False
+    time.sleep(0.25)
+    
 # -----------------------------------------------------
+class InputBox:
 
-while True: # main game loop
-    for event in pygame.event.get():
-        if event.type == pygame.locals.QUIT:
-            pygame.quit()
-            exit()
+    def __init__(self, x, y, w, h, text=''):
+        FONT = pygame.font.Font(None, 32)
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = GRAY
+        self.text = text
+        self.txt_surface = FONT.render(text, True, self.color)
+        self.active = False
 
-    card1 = Card(198, 461, "CA")
+    def handle_event(self, event):
+        FONT = pygame.font.Font(None, 32)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = RED if self.active else GRAY
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    player1.setBid(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = FONT.render(self.text, True, self.color)
 
-    # Player's card spots
-    card_button(card1, send_card_action)
-    #card_button(278, 461, send_card_action)
-    #card_button(358, 461, send_card_action)
-    #card_button(438, 461, send_card_action)
-    #card_button(518, 461, send_card_action)
-    #card_button(598, 461, send_card_action)
-    #card_button(678, 461, send_card_action)
-    #card_button(758, 461, send_card_action)
-    #card_button(838, 461, send_card_action)
-    #card_button(918, 461, send_card_action)
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(40, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Blit the rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+# -----------------------------------------------------
+#GLOBALS
+#-----------------------------------------------------------------------------
+deckObj = cardGame.deck()
+fieldObj = cardGame.deck()
+player1 = cardGame.player("p1")
+comPlayer2 = cardGame.player("p2")
+comPlayer3 = cardGame.player("p3")
+comPlayer4 = cardGame.player("p4")
+suitAsked = None
+roundNum = 1
+cardsNum = 10
+trumpSuit = None
+GAMEOVER = False
+
+'''IMPORTANT GAME FLOW GLOBALS'''
+roundInProgress = False  #Is a round currently in progress?
+firstTrickOfRound = True #Is it the first trick of the round?
+roundStarter = "p2"      #Who starts the round
+trickStarter = "p2"      #keeps track of who starts the next trick
+playerTurn = "p2"        #Whoose turn is it currently
+doneWithTurn = False     #For p1 only!!
+waiting = False          #After computer finishs turn wait for NEXT ACTION
+cooldownInProgress = False #Cooldown between tricks (so they don't immediately disappear)
+#*****************************************************************************
+#MAIN
+#*****************************************************************************
+def main():
+    global roundNum, cardsNum    
+
+    #CREATE DECK
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("hearts", val))
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("diamonds", val))
+    for val in range(2, 15):  
+        deckObj.addCard(cardGame.card("clubs", val))    
+    for val in range(2, 15):
+        deckObj.addCard(cardGame.card("spades", val))
+        
+    bid_input_box = InputBox(640, 640, 40, 40)
+    global input_boxes 
+    input_boxes = [bid_input_box]    
+
+    #playerTurnThread = threading.Thread(target=playerTurn, args=(player1,))
     
-    # Displaying cards in hand
-    cardx1 = 200
-    cardy1 = 463
-    DISPLAYSURF.blit(C2, (cardx1, cardy1))
-    
-    # Opponent's hands
-    opponent_cards(1, 10)
-    opponent_cards(2, 10)
-    opponent_cards(3, 10)
-    
-    # Opponent take their turn
-    opponent_play()
-    
-    # Trump Card
-    trump_card(C3)
-    
-    # Bottom toolbar
-    toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
-    newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
-    round = 10 # TEST
-    newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
-    newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
-    points = 100 # TEST
-    newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
-    newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
-    newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
-    
-    fpsClock.tick(60)
-    pygame.display.update()
-    
-    
-    
-    
+    #MAIN GAME LOOP
+    while (not GAMEOVER):
+        for event in pygame.event.get():
+            if event.type == pygame.locals.QUIT:
+                pygame.quit()
+                exit()
+            for box in input_boxes:
+                box.handle_event(event)
+                
+        # Bottom toolbar
+        toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
+        newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
+        round = 10 # TEST
+        newLabel(str(round), 160, 640, 40, 50, BLACK, RED)
+        newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
+        points = 100 # TEST
+        newLabel(str(points), 400, 640, 40, 50, BLACK, RED)
+        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
+        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
+        for box in input_boxes:
+            box.update()
+        for box in input_boxes:
+            box.draw(DISPLAYSURF)
+
+        '''ROUND NOT IN PROGRESS '''
+        #Round setup
+        global roundInProgress
+        if(not roundInProgress):
+            print("SETTING UP ROUND")
+            #Shuffle deck
+            deckObj.shuffle()    
+            #Deal cards
+            try:
+                for i in range(cardsNum):
+                    player1.addCardToHand(deckObj.drawCard())
+                    comPlayer2.addCardToHand(deckObj.drawCard())
+                    comPlayer3.addCardToHand(deckObj.drawCard())
+                    comPlayer4.addCardToHand(deckObj.drawCard())
+            except IndexError:
+                pass
+            
+            global trumpSuit
+            #Choose Trump
+            trumpCard = random.choice(deckObj.mydeck)
+            trumpSuit = trumpCard.getSuit() 
+            
+            #TODO
+            #set up bidding system
+            global roundStarter
+            if (roundStarter == 'p2'):
+                p2StartBid()
+            elif (roundStarter == 'p3'):
+                p3StartBid()
+            elif (roundStarter == 'p4'):
+                p4StartBid()
+            else:
+                p1StartBid()
+            
+            #Setup complete! Round now in progress
+            roundInProgress = True
+        
+        '''ROUND IN PROGRESS '''
+        #Play the round
+        if(roundInProgress):
+            '''FIRST TRICK OF ROUND'''
+            global firstTrickOfRound
+            if(firstTrickOfRound):                
+                if(roundStarter == 'p1'):
+                    playTrick(roundStarter)
+                elif(roundStarter == 'p2'):
+                    playTrick(roundStarter)
+                elif(roundStarter == 'p3'):
+                    playTrick(roundStarter)
+                elif(roundStarter == 'p4'):
+                    playTrick(roundStarter)
+            else: #Not first trick of round
+                global trickStarter
+                if(trickStarter == 'p1'):
+                    playTrick(trickStarter)
+                elif(trickStarter == 'p2'):
+                    playTrick(trickStarter)
+                elif(trickStarter == 'p3'):
+                    playTrick(trickStarter)
+                elif(trickStarter == 'p4'):
+                    playTrick(trickStarter)
+            
+            # Displaying cards in hand
+            showHand()
+            
+            # Opponent's hands
+            opponent_cards(1, 10)
+            opponent_cards(2, 10)
+            opponent_cards(3, 10)        
+            
+            # Trump Card
+            trump_card(trumpCard.displayCard())
+            
+            #If round is over resolve the round
+            if(len(player1.hand) == 0 and len(fieldObj.mydeck) == 0):
+                print("ROUND OVER")
+                print("Deck size: " + str(len(deckObj.mydeck)))
+                resolveRound()
+                roundNum += 1
+                cardsNum -= 1
+                roundInProgress = False
+                if(roundNum > 10):
+                    print("GAMEOVER")
+                    pygame.quit()
+                    exit()
+                
+            
+            #NEXT BUTTON
+            if(playerTurn != 'p1'):
+                newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+            elif(not doneWithTurn): #If player 1 not done with turn hide NEXT button
+                #newLabel("", 1025, 490, 90, 50, FELT_GREEN, FELT_GREEN)
+                pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (1025, 490, 90, 50))
+            else:
+                newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+            global cooldownInProgress
+            #If cooldown in progress hide the NEXT button    
+            if(cooldownInProgress):
+                pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (1025, 490, 90, 50))
+            
+            #GLOBAL VARIABLES DISPLAY
+            '''
+            newLabel("cooldownInProgress: " + str(cooldownInProgress) + "      TrickStater: " + trickStarter 
+                     + "      PlayerTurn: " + playerTurn + "      P1 turn done: " + str(doneWithTurn) 
+                     + "      Waiting: " + str(waiting), 0, 0, 1280, 40, BLACK, RED)
+            '''
+            
+            newLabel(trickStarter + " starts the trick!        Suit Asked: " + str(suitAsked).upper(), 0, 0, 1280, 35, BLACK, RED)  
+        
+        # Bottom toolbar
+        toolbarSurf = pygame.draw.rect(DISPLAYSURF, BLACK, (0, 630, 1280, 70))
+        newLabel("Round:", 40, 640, 160, 50, BLACK, RED)
+        #round = 10 # TEST
+        newLabel(str(roundNum), 160, 640, 40, 50, BLACK, RED)
+        newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
+        #points = 100 # TEST
+        newLabel(str(player1.getPoints()), 400, 640, 40, 50, BLACK, RED)
+        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
+        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
+        for box in input_boxes:
+            box.update()
+        for box in input_boxes:
+            box.draw(DISPLAYSURF)
+        
+        fpsClock.tick(60)
+        #mainDisplay = pygame.Rect(0, 0, 1280, 630)
+        #pygame.display.update(mainDisplay)
+        pygame.display.flip()
+#*****************************************************************************    
+                 
+if __name__ == '__main__':
+    main()
+    exit()    
     
     
     
