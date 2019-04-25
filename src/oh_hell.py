@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """    
-import pygame, sys, os, math, random, time
+import pygame, sys, os, math, random, time, webbrowser
 from pygame.locals import *
 from gamelib import cardGame
 
@@ -176,7 +176,6 @@ def trickResolveCooldown():
         now = pygame.time.get_ticks()
         if((now - last) >= 3000): #wait 3 seconds
             resolveTrick()
-            #doneWithTurn = False
             cooldownInProgress = False
             
 def playTrick(starter):
@@ -277,6 +276,7 @@ def resolveTrick():
 #Counts points, clears tricks, and moves starting player to the left     
 def resolveRound():
     #Check if bids match number of tricks won. If they do give that player points
+    '''
     if(player1.getTricks() == player1.getBid()):
         player1.addPoints(player1.getBid() + 10)
     if(comPlayer2.getTricks() == comPlayer2.getBid()):
@@ -285,7 +285,14 @@ def resolveRound():
         comPlayer3.addPoints(comPlayer3.getBid() + 10)
     if(comPlayer4.getTricks() == comPlayer4.getBid()):
         comPlayer4.addPoints(comPlayer4.getBid() + 10)
-        
+    '''  
+    
+    #Get 10 points for every trick because bidding mechanic was not implemented
+    player1.addPoints(player1.getTricks() * 10)
+    comPlayer2.addPoints(comPlayer2.getTricks() * 10)
+    comPlayer3.addPoints(comPlayer3.getTricks() * 10)
+    comPlayer4.addPoints(comPlayer4.getTricks() * 10)
+    
     player1.clearTricks()
     comPlayer2.clearTricks()
     comPlayer3.clearTricks()
@@ -346,6 +353,7 @@ BEIGE   = (245, 245, 220)
 RED     = (200, 0, 0)
 GREEN   = pygame.Color(0, 200, 0)
 BLUE    = pygame.Color(0, 0, 200)
+LIGHT_BLUE = pygame.Color(65, 105, 225)
 YELLOW  = pygame.Color(255, 255, 0)
 BRIGHT_RED   = (255,0,0)
 BRIGHT_GREEN = (0,255,0)
@@ -527,6 +535,9 @@ def clean_field_action():
         
 def quit_action():
     pygame.draw.rect(DISPLAYSURF, GRAY, (439 , 202, 315, 218))
+    
+def instruction_action():
+    webbrowser.open('https://www.pagat.com/exact/ohhell.html')
 
 #Next button action
 #Change player turn
@@ -680,12 +691,12 @@ def main():
             
             #NEXT BUTTON
             if(playerTurn != 'p1'):
-                newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+                newButton("NEXT", 1025, 490, 90, 50, LIGHT_BLUE, RED, action=next_action)
             elif(not doneWithTurn): #If player 1 not done with turn hide NEXT button
                 #newLabel("", 1025, 490, 90, 50, FELT_GREEN, FELT_GREEN)
                 pygame.draw.rect(DISPLAYSURF, FELT_GREEN, (1025, 490, 90, 50))
             else:
-                newButton("NEXT", 1025, 490, 90, 50, BLUE, RED, action=next_action)
+                newButton("NEXT", 1025, 490, 90, 50, LIGHT_BLUE, RED, action=next_action)
             global cooldownInProgress
             #If cooldown in progress hide the NEXT button    
             if(cooldownInProgress):
@@ -708,9 +719,20 @@ def main():
         newLabel("Points:", 280, 640, 160, 50, BLACK, RED)
         #points = 100 # TEST
         newLabel(str(player1.getPoints()), 400, 640, 40, 50, BLACK, RED)
-        newButton("Instructons", 920, 640, 240, 50, BLUE, RED, action=None)
-        newButton("Quit", 1200, 640, 60, 50, BLUE, RED, action=quit_action)
+        newButton("Instructions", 920, 640, 240, 50, LIGHT_BLUE, RED, action=instruction_action)
+        newButton("Quit", 1200, 640, 60, 50, LIGHT_BLUE, RED, action=quit_action)
         newLabel("Your Bid:", 520, 640, 120, 50, BLACK, RED)
+        newLabel("Tricks: " + str(player1.getTricks()), 160, 570, 160, 50, FELT_GREEN, BLACK)
+        
+        #Player 2
+        newLabel("Tricks: " + str(comPlayer2.getTricks()), 65, 470, 100, 20, FELT_GREEN, BLACK)
+        newLabel("Points: " + str(comPlayer2.getPoints()), 65, 500, 100, 20, FELT_GREEN, BLACK)
+        #Player 3
+        newLabel("Tricks: " + str(comPlayer3.getTricks()), 180, 65, 100, 20, FELT_GREEN, BLACK)
+        newLabel("Points: " + str(comPlayer3.getPoints()), 180, 95, 100, 20, FELT_GREEN, BLACK)
+        #Player 4
+        newLabel("Tricks: " + str(comPlayer4.getTricks()), 1125, 185, 100, 20, FELT_GREEN, BLACK)
+        newLabel("Points: " + str(comPlayer4.getPoints()), 1125, 215, 100, 20, FELT_GREEN, BLACK)
         for box in input_boxes:
             box.update()
         for box in input_boxes:
